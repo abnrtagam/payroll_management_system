@@ -1,0 +1,277 @@
+/* ============================================================
+   Payroll Management System — Custom Theme
+   ============================================================
+   Design Specifications:
+   - Deep charcoal sidebar (#0F1117)
+   - Off-white main content (#F7F6F2)
+   - Amber/gold accent (#C8963E)
+   - IBM Plex Sans for body, IBM Plex Mono for numbers
+   - Borderless-look tables with subtle alternating rows
+   - No rounded corners larger than 6px
+   ============================================================ */
+
+/* ── Typography ── */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+    /* Colors */
+    --color-sidebar: #0F1117;
+    --color-bg: #F7F6F2;
+    --color-accent: #C8963E;
+    --color-text: #2D3142;
+    --color-text-muted: #7F8C8D;
+    --color-card-border: #E2DDD5;
+    --color-table-row-alt: #F0EDE6;
+    --color-destructive: #C0392B;
+    
+    /* Fonts */
+    --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: 'IBM Plex Mono', SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* ── General Styles ── */
+body {
+    font-family: var(--font-sans);
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-size: 14px;
+    margin: 0;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+    width: 240px;
+    height: 100vh;
+    background-color: var(--color-sidebar);
+    color: #FFFFFF;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-brand {
+    padding: 20px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--color-accent);
+}
+
+.sidebar-nav {
+    flex-grow: 1;
+    padding: 20px 0;
+}
+
+.sidebar-nav .nav-link {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.sidebar-nav .nav-link i {
+    margin-right: 12px;
+    width: 16px;
+    text-align: center;
+}
+
+.sidebar-nav .nav-link:hover {
+    color: #FFFFFF;
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.sidebar-nav .nav-link.active {
+    color: var(--color-accent);
+    border-left-color: var(--color-accent);
+    background-color: rgba(200, 150, 62, 0.05);
+}
+
+/* ── Main Content Area ── */
+.main-content {
+    margin-left: 240px;
+    padding: 30px;
+    min-height: 100vh;
+}
+
+/* ── Cards ── */
+.card {
+    background-color: #FFFFFF;
+    border: 1px solid var(--color-card-border);
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background-color: #FFFFFF;
+    border-bottom: 1px solid var(--color-card-border);
+    padding: 15px 20px;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.card-body {
+    padding: 20px;
+}
+
+/* ── Tables ── */
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: var(--color-text);
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: 12px 15px;
+    vertical-align: middle;
+    border: none;
+}
+
+.table thead th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    border-bottom: 1px solid var(--color-card-border);
+    text-align: left;
+}
+
+.table tbody tr {
+    border-bottom: 1px solid var(--color-card-border);
+}
+
+.table tbody tr:nth-of-type(even) {
+    background-color: var(--color-table-row-alt);
+}
+
+.table tbody tr:hover {
+    background-color: rgba(200, 150, 62, 0.02);
+}
+
+/* ── Monospace for Numbers/Currency ── */
+.amount,
+.numeric,
+.date {
+    font-family: var(--font-mono);
+    font-weight: 500;
+}
+
+/* ── Buttons ── */
+.btn {
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+}
+
+.btn-primary {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #FFFFFF;
+}
+
+.btn-primary:hover {
+    background-color: #B28537;
+    border-color: #B28537;
+}
+
+.btn-danger {
+    background-color: var(--color-destructive);
+    border-color: var(--color-destructive);
+    color: #FFFFFF;
+}
+
+.btn-danger:hover {
+    background-color: #A93226;
+    border-color: #A93226;
+}
+
+.btn-outline {
+    border-color: var(--color-card-border);
+    color: var(--color-text);
+    background-color: #FFFFFF;
+}
+
+.btn-outline:hover {
+    background-color: var(--color-bg);
+    border-color: var(--color-card-border);
+}
+
+/* ── Forms ── */
+.form-control {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    font-family: var(--font-sans);
+    color: var(--color-text);
+    background-color: #FFFFFF;
+    border: 1px solid var(--color-card-border);
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--color-accent);
+}
+
+.form-label {
+    display: inline-block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--color-text);
+}
+
+/* ── Utility Classes ── */
+.text-muted {
+    color: var(--color-text-muted) !important;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.badge {
+    font-weight: 600;
+    font-size: 0.7rem;
+    padding: 3px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+
+.badge-success {
+    background-color: #E8F8F5;
+    color: #117864;
+}
+
+.badge-warning {
+    background-color: #FEF9E7;
+    color: #B7950B;
+}
