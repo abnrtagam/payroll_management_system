@@ -12,4 +12,14 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => alert.remove(), 500);
         }, 5000);
     });
+
+    // Confirmation for ETL run
+    const etlBtn = document.querySelector('button[name="run_etl"]');
+    if (etlBtn) {
+        etlBtn.addEventListener('click', function(e) {
+            if (!confirm('Are you sure you want to run the ETL process? This will truncate and reload all data warehouse tables.')) {
+                e.preventDefault();
+            }
+        });
+    }
 });
