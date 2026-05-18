@@ -74,3 +74,38 @@ payroll_management_IM/
 │   └── payroll_system.sql
 └── index.php
 ```
+
+## 🔄 System Logical Flow
+
+This section describes the flow of data and operations within the system, detailing which files handle specific functions.
+
+### 1. Initialization & Navigation
+- **Entry Point**: `index.php` (Root) redirects users to the Dashboard.
+- **Database Connection**: `config/db.php` is required by all functional pages to establish a secure PDO connection.
+- **Layout & Navigation**: `includes/header.php`, `includes/sidebar.php`, and `includes/footer.php` provide a consistent UI and navigation links.
+
+### 2. Employee Management Flow
+- **Listing**: `pages/employees/index.php` fetches data from the `v_employee_full` view to display all employees.
+- **Creation**: `pages/employees/add.php` collects employee details and inserts them using a prepared statement after validating the email is unique.
+- **Modification**: `pages/employees/edit.php` handles updates. It reads the current `version` of the employee record. Upon saving, it checks if the version still matches to prevent overwriting concurrent changes.
+- **Removal**: `pages/employees/delete.php` attempts to delete an employee. It catches foreign key constraint errors if the employee has existing payroll records.
+
+### 3. Payroll Processing Flow
+- **Input**: `pages/payroll/process.php` allows selection of the month and year.
+- **Execution**:
+  1. Starts a database transaction (`BEGIN`).
+  2. Reads active employees.
+  3. Checks for existing records to prevent duplicates.
+  4. Increments the employee `version` column. If the update fails (0 rows affected), it rolls back the transaction (Concurrency Control).
+  5. Inserts records into `payroll_records` and `payroll_items`.
+  6. Commits the transaction (`COMMIT`).
+
+### 4. Data Warehouse & ETL Flow
+- **Display**: `pages/warehouse/index.php` queries the `fact_payroll` table joined with dimension tables to show analytical data.
+- **ETL Trigger**: Clicking the "Run ETL Process" button on the same page calls the `sp_run_etl()` stored procedure.
+- **ETL Execution** (Inside DB):
+  1. Truncates star schema tables.
+  2. Extracts data from transactional tables.
+  3. Transforms data (e.g., deriving quarter, formatting names).
+  4. Loads data into dimension and fact tables.
+
