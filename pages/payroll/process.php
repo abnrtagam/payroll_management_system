@@ -93,8 +93,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $ins_item->execute([$record_id, $basic_pay]);
 
                     // E. Insert payroll items (Deductions)
-                    $ins_item->execute([$record_id, $basic_pay * 0.10]); // Tax
-                    $pdo->prepare("UPDATE payroll_items SET item_type = 'deduction', description = 'Tax' WHERE item_id = ?")->execute([$pdo->lastInsertId()]);
+                    $ins_deduction = $pdo->prepare("
+                        INSERT INTO payroll_items (record_id, item_type, description, amount)
+                        VALUES (?, 'deduction', 'Tax', ?)
+                    ");
+                    $ins_deduction->execute([$record_id, $basic_pay * 0.10]);
                     
                     $processed_count++;
                 }
