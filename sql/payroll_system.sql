@@ -1,27 +1,21 @@
--- ============================================================
 -- Payroll Management System — Full Database Schema
 -- IT221 Information Management
--- ============================================================
 -- This script creates:
 --   1. OLTP tables with full referential integrity
 --   2. Star-schema (OLAP) tables for data warehousing
 --   3. Three database views (advanced SQL, window functions)
 --   4. One stored procedure for ETL (sp_run_etl)
 --   5. Seed data for testing
--- ============================================================
 
 DROP DATABASE IF EXISTS payroll_system;
 CREATE DATABASE payroll_system CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE payroll_system;
 
--- ============================================================
 -- 1. OLTP TABLES (Transactional)
--- ============================================================
 -- Relationship chain:
 --   departments → positions → employees → payroll_records → payroll_items
 -- All foreign keys use ON DELETE RESTRICT to enforce referential integrity:
 --   you cannot delete a parent row while child rows reference it.
--- ============================================================
 
 -- ------------------------------------------------------------
 -- 1a. departments
@@ -120,12 +114,9 @@ CREATE TABLE payroll_items (
 ) ENGINE=InnoDB;
 
 
--- ============================================================
 -- 2. STAR-SCHEMA TABLES (OLAP / Data Warehouse)
--- ============================================================
 -- Star schema: fact_payroll at center, surrounded by four
 -- dimension tables. Used for analytical queries and reporting.
--- ============================================================
 
 -- ------------------------------------------------------------
 -- 2a. dim_employee
@@ -198,9 +189,7 @@ CREATE TABLE fact_payroll (
 ) ENGINE=InnoDB;
 
 
--- ============================================================
 -- 3. DATABASE VIEWS (Advanced SQL)
--- ============================================================
 
 -- ------------------------------------------------------------
 -- 3a. v_employee_full (View)
@@ -301,7 +290,6 @@ INNER JOIN positions p  ON e.pos_id  = p.pos_id
 INNER JOIN departments d ON p.dept_id = d.dept_id;
 
 
--- ============================================================
 -- 4. STORED PROCEDURE — sp_run_etl
 -- Purpose: Runs the Extract, Transform, and Load (ETL) process 
 --          to refresh the OLAP Data Warehouse tables.
@@ -312,7 +300,6 @@ INNER JOIN departments d ON p.dept_id = d.dept_id;
 --      old dimensional data, then resets it to 1 to preserve integrity.
 --   3. Data Transformation: Concatenates names, derives quarters using CEIL(), 
 --      and maps numerical months to abbreviated text labels using ELT().
--- ============================================================
 
 DELIMITER $$
 
@@ -400,12 +387,9 @@ END$$
 DELIMITER ;
 
 
--- ============================================================
 -- 5. SEED DATA
--- ============================================================
 -- Realistic sample data so the system has something to display
 -- immediately after import.
--- ============================================================
 
 -- Departments
 INSERT INTO departments (dept_name) VALUES
@@ -560,9 +544,7 @@ INSERT INTO payroll_items (record_id, item_type, description, amount) VALUES
 (12, 'deduction', 'PhilHealth',     800.00);
 
 
--- ============================================================
 -- 6. VERIFICATION QUERIES (optional — run to confirm setup)
--- ============================================================
 -- SELECT * FROM v_employee_full;
 -- SELECT * FROM v_department_payroll_summary;
 -- SELECT * FROM v_payroll_with_rank;
