@@ -203,10 +203,12 @@ CREATE TABLE fact_payroll (
 -- ============================================================
 
 -- ------------------------------------------------------------
--- 3a. v_employee_full
--- JOIN of employees, positions, and departments.
--- Provides a single flat view of employee info with their
--- department and position details.
+-- 3a. v_employee_full (View)
+-- Purpose: Combines employee profiles with their active positions 
+--          and department details into a single flat view.
+-- Key Features: Performs a 3-way INNER JOIN linking employees, 
+--               positions, and departments. Useful for simplifying 
+--               frequent lookups in PHP pages.
 -- ------------------------------------------------------------
 CREATE OR REPLACE VIEW v_employee_full AS
 SELECT
@@ -228,10 +230,14 @@ INNER JOIN positions p ON e.pos_id = p.pos_id
 INNER JOIN departments d ON p.dept_id = d.dept_id;
 
 -- ------------------------------------------------------------
--- 3b. v_department_payroll_summary
--- Uses GROUP BY with JOIN and a correlated subquery to show
--- total payroll per department and the count of employees
--- who have been paid.
+-- 3b. v_department_payroll_summary (View)
+-- Purpose: Generates high-level aggregated payroll statistics 
+--          grouped by department.
+-- Key Features:
+--   1. GROUP BY & Aggregate Functions: Counts paid employees (COUNT DISTINCT), 
+--      total records (COUNT), and sums take-home wages (SUM with COALESCE).
+--   2. Correlated Subquery: Finds the most recent processed date for each 
+--      department by querying payroll_records matching the current row's dept_id.
 -- ------------------------------------------------------------
 CREATE OR REPLACE VIEW v_department_payroll_summary AS
 SELECT
@@ -254,10 +260,16 @@ LEFT JOIN payroll_records pr ON e.emp_id = pr.emp_id
 GROUP BY d.dept_id, d.dept_name;
 
 -- ------------------------------------------------------------
--- 3c. v_payroll_with_rank
--- Advanced SQL: uses RANK() window function to rank employees
--- by net pay within each department per pay period, and
--- SUM() OVER to compute running totals.
+-- 3c. v_payroll_with_rank (View)
+-- Purpose: Performs advanced payroll analytics and year-to-date tracking.
+-- Key Features (SQL Window Functions):
+--   1. RANK() OVER: Ranks employees by their net pay within their specific 
+--      department and pay period, with the highest earner receiving rank 1.
+--   2. SUM() OVER:
+--      - `dept_period_total`: Calculates the total net payroll spent by a 
+--        particular department in a specific month and year.
+--      - `running_total`: Computes a cumulative running total of all net pay 
+--        received by each employee chronologically over time.
 -- ------------------------------------------------------------
 CREATE OR REPLACE VIEW v_payroll_with_rank AS
 SELECT
@@ -291,17 +303,15 @@ INNER JOIN departments d ON p.dept_id = d.dept_id;
 
 -- ============================================================
 -- 4. STORED PROCEDURE — sp_run_etl
--- ============================================================
--- ETL (Extract, Transform, Load) procedure:
---   1. Truncates all star-schema (OLAP) tables
---   2. Reloads them from the transactional (OLTP) tables
---   3. Applies transformations:
---      - Derives quarter from period_month
---      - Concatenates full_name from first + last name
---      - Computes period_label as 'Mon YYYY'
---
--- Uses a transaction so the warehouse is never in a
--- partially-loaded state.
+-- Purpose: Runs the Extract, Transform, and Load (ETL) process 
+--          to refresh the OLAP Data Warehouse tables.
+-- Key Features:
+--   1. Transaction Isolation: Wraps operations in START TRANSACTION and COMMIT. 
+--      If an error occurs, it rolls back (ROLLBACK) to prevent partial data states.
+--   2. Disabling Constraints: Temporarily sets FOREIGN_KEY_CHECKS = 0 to truncate 
+--      old dimensional data, then resets it to 1 to preserve integrity.
+--   3. Data Transformation: Concatenates names, derives quarters using CEIL(), 
+--      and maps numerical months to abbreviated text labels using ELT().
 -- ============================================================
 
 DELIMITER $$
