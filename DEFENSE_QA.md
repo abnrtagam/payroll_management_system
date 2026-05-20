@@ -115,6 +115,18 @@ A: Without it, two administrators running payroll at the same time could both pa
 
 ---
 
+**Q: Give a specific scenario of how the version column prevents errors.**
+
+A: Imagine HR Staff A clicks "Run Payroll" and the system reads Employee Abner's salary as ₱38,000 (Version 0). At that exact second, HR Staff B edits Abner's profile and promotes him, changing his salary to ₱55,000 (Version becomes 1). When Staff A's payroll process tries to save the paycheck, it checks if the version is still 0. Since it's now 1, the system aborts the payroll run. Without this, Abner would have been paid the old ₱38,000 salary!
+
+---
+
+**Q: Why does the version column only increase when running payroll, but not when running the ETL process?**
+
+A: The version column is a lock to protect data *modifications*. Running Payroll actually creates new financial records based on the employee data, so it requires strict protection. The ETL process, on the other hand, only *reads* the employee data to copy it into the warehouse. Because ETL doesn't update the operational employee records, the version number stays the same.
+
+---
+
 ## 5. DATA WAREHOUSING & STAR SCHEMA
 
 **Q: What is a data warehouse and how is it different from your regular database tables?**
@@ -132,6 +144,18 @@ A: A star schema has one central fact table surrounded by dimension tables. The 
 **Q: Why does your dim_time table have a `quarter` column if quarter can be derived from month?**
 
 A: In data warehousing, pre-computing derived values is intentional. The purpose of the warehouse is fast analytical queries. If I need to group payroll by quarter, I don't want every query to recalculate `CEIL(month/3)` every time it runs. By storing it in `dim_time` during the ETL load, the analytical query just reads the value directly. This is the "Transform" part of ETL — we do the computation once at load time, not at query time.
+
+---
+
+**Q: What is the exact difference between the Payroll History page and the Data Warehouse page?**
+
+A: Payroll History acts like a filing cabinet of individual pay slips — it shows detailed, per-person records directly from the live operational tables (OLTP), and it updates instantly. The Data Warehouse acts like a manager's summary report — it shows aggregated, transformed data (like "Jan 2026") from the OLAP tables, optimized for big-picture analysis, and it only updates when you manually run the ETL process.
+
+---
+
+**Q: What is the difference between the `payroll_records` table and the `payroll_items` table?**
+
+A: Think of it like a grocery receipt. `payroll_records` is the header of the receipt — it shows the summary totals for one paycheck (e.g., Abner received ₱46,750 net pay in Jan 2026). `payroll_items` are the individual line items on that receipt — it shows exactly where the deductions came from (e.g., ₱5,500 Tax, ₱1,375 SSS, ₱1,375 PhilHealth).
 
 ---
 
@@ -161,6 +185,30 @@ A: Three reasons. First, performance — all the data transformation and loading
 
 ---
 
+**Q: Walk me through the exact step-by-step flow of your `sp_run_etl()` procedure.**
+
+A: First, it declares an EXIT HANDLER to rollback everything if an error occurs. Second, it starts the transaction. Third, it temporarily disables foreign key checks, wipes (TRUNCATES) all 5 warehouse tables, and re-enables the checks. Fourth, it extracts data from the live tables, transforms it (like combining first and last names, or calculating quarters), and loads it into the 4 dimension tables. Fifth, it links the raw payroll records to the new dimension IDs and loads the financial numbers into the `fact_payroll` table. Finally, it commits the transaction.
+
+---
+
+**Q: Why does the ETL process wipe out ALL 5 warehouse tables (including dimensions) instead of just the fact table?**
+
+A: Because `fact_payroll` relies on the exact IDs of the dimension tables. If we only wiped the fact table, but an employee's name changed or a new department was added in the live database, our dimension tables would be outdated. Wiping all 5 ensures the entire warehouse perfectly matches the live database.
+
+---
+
+**Q: What operational steps must a user take in the system before they can run the ETL process and see new data?**
+
+A: The ETL process only extracts existing data. Therefore, the HR admin must first ensure there are active employees in the system, and then they must go to the Process Payroll page and successfully run payroll for a specific month. Once those live operational records (`payroll_records`) exist, the user can run the ETL to sync them into the Data Warehouse.
+
+---
+
+**Q: If the ETL wipes out the old data, why do previous months still show up in the Data Warehouse?**
+
+A: "Wiping out" means it temporarily empties the warehouse tables to prevent duplicates. However, the ETL then goes to the live database and copies *everything* from the beginning of time — including all previous months and the brand new month — and pastes it all back into the warehouse. A data warehouse is designed to hold all historical data forever for yearly reporting.
+
+---
+
 ## 7. GENERAL SYSTEM QUESTIONS
 
 **Q: Why did you use PDO instead of mysqli?**
@@ -184,6 +232,12 @@ A: Five main pages. The Dashboard shows summary statistics — total employees, 
 **Q: What would you improve if you had more time?**
 
 A: A few things. First, I would add authentication — currently anyone who knows the URL can access the system. Second, I would add audit logging — a table that records who did what and when, which is important for a financial system. Third, I would improve the ETL to support incremental loads instead of full-refresh, which would scale better with large datasets. Fourth, I would add input validation on the frontend using JavaScript in addition to the server-side validation already present.
+
+---
+
+**Q: Why does phpMyAdmin only show 25 rows in a table, but the web dashboard shows all 60 rows?**
+
+A: This is due to pagination. By default, phpMyAdmin limits the display to 25 rows per page to load quickly in the browser, but you can click "Next" or change the row limit to see the rest. The web dashboard PHP code executes a `SELECT *` without a `LIMIT` clause, so it fetches and displays all 60 rows at once on a single page.
 
 ---
 
