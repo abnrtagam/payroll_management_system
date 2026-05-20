@@ -1,9 +1,6 @@
 <?php
-// pages/payroll/history.php
-// ============================================================
 // Payroll History — Lists all records with JOIN on employees.
 // Filters by department and year.
-// ============================================================
 require_once __DIR__ . '/../../config/db.php';
 
 $page_title = 'Payroll History';

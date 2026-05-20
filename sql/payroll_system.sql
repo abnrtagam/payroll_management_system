@@ -87,11 +87,9 @@ CREATE TABLE payroll_records (
         ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
--- ------------------------------------------------------------
 -- 1e. payroll_items
 -- Line-item breakdown for each payroll record.
 -- item_type = 'earning' or 'deduction'
--- ------------------------------------------------------------
 CREATE TABLE payroll_items (
     item_id     INT AUTO_INCREMENT PRIMARY KEY,
     record_id   INT           NOT NULL,
@@ -131,9 +129,8 @@ CREATE TABLE dim_department (
     dept_name     VARCHAR(100) NOT NULL
 ) ENGINE=InnoDB;
 
--- ------------------------------------------------------------
 -- 2c. dim_position
--- ------------------------------------------------------------
+-- ----------------------------------------------------------
 CREATE TABLE dim_position (
     dim_pos_id    INT AUTO_INCREMENT PRIMARY KEY,
     source_pos_id INT          NOT NULL,
@@ -183,14 +180,7 @@ CREATE TABLE fact_payroll (
 
 -- 3. DATABASE VIEWS (Advanced SQL)
 
--- ------------------------------------------------------------
--- 3a. v_employee_full (View)
--- Purpose: Combines employee profiles with their active positions 
---          and department details into a single flat view.
--- Key Features: Performs a 3-way INNER JOIN linking employees, 
---               positions, and departments. Useful for simplifying 
---               frequent lookups in PHP pages.
--- ------------------------------------------------------------
+
 CREATE OR REPLACE VIEW v_employee_full AS
 SELECT
     e.emp_id,
@@ -210,16 +200,7 @@ FROM employees e
 INNER JOIN positions p ON e.pos_id = p.pos_id
 INNER JOIN departments d ON p.dept_id = d.dept_id;
 
--- ------------------------------------------------------------
--- 3b. v_department_payroll_summary (View)
--- Purpose: Generates high-level aggregated payroll statistics 
---          grouped by department.
--- Key Features:
---   1. GROUP BY & Aggregate Functions: Counts paid employees (COUNT DISTINCT), 
---      total records (COUNT), and sums take-home wages (SUM with COALESCE).
---   2. Correlated Subquery: Finds the most recent processed date for each 
---      department by querying payroll_records matching the current row's dept_id.
--- ------------------------------------------------------------
+
 CREATE OR REPLACE VIEW v_department_payroll_summary AS
 SELECT
     d.dept_id,
@@ -240,18 +221,7 @@ LEFT JOIN employees e   ON p.pos_id  = e.pos_id
 LEFT JOIN payroll_records pr ON e.emp_id = pr.emp_id
 GROUP BY d.dept_id, d.dept_name;
 
--- ------------------------------------------------------------
--- 3c. v_payroll_with_rank (View)
--- Purpose: Performs advanced payroll analytics and year-to-date tracking.
--- Key Features (SQL Window Functions):
---   1. RANK() OVER: Ranks employees by their net pay within their specific 
---      department and pay period, with the highest earner receiving rank 1.
---   2. SUM() OVER:
---      - `dept_period_total`: Calculates the total net payroll spent by a 
---        particular department in a specific month and year.
---      - `running_total`: Computes a cumulative running total of all net pay 
---        received by each employee chronologically over time.
--- ------------------------------------------------------------
+
 CREATE OR REPLACE VIEW v_payroll_with_rank AS
 SELECT
     pr.record_id,
@@ -283,15 +253,6 @@ INNER JOIN departments d ON p.dept_id = d.dept_id;
 
 
 -- 4. STORED PROCEDURE — sp_run_etl
--- Purpose: Runs the Extract, Transform, and Load (ETL) process 
---          to refresh the OLAP Data Warehouse tables.
--- Key Features:
---   1. Transaction Isolation: Wraps operations in START TRANSACTION and COMMIT. 
---      If an error occurs, it rolls back (ROLLBACK) to prevent partial data states.
---   2. Disabling Constraints: Temporarily sets FOREIGN_KEY_CHECKS = 0 to truncate 
---      old dimensional data, then resets it to 1 to preserve integrity.
---   3. Data Transformation: Concatenates names, derives quarters using CEIL(), 
---      and maps numerical months to abbreviated text labels using ELT().
 
 DELIMITER $$
 
@@ -305,7 +266,7 @@ BEGIN
 
     START TRANSACTION;
 
-    -- ----- TRUNCATE (disable FK checks temporarily) -----
+   -- Wipe All Old Warehouse Data
     SET FOREIGN_KEY_CHECKS = 0;
     TRUNCATE TABLE fact_payroll;
     TRUNCATE TABLE dim_employee;
@@ -380,8 +341,6 @@ DELIMITER ;
 
 
 -- 5. SEED DATA
--- Realistic sample data so the system has something to display
--- immediately after import.
 
 -- Departments
 INSERT INTO departments (dept_name) VALUES
