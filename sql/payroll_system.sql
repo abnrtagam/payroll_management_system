@@ -1,12 +1,7 @@
--- Payroll Management System — Full Database Schema
--- IT221 Information Management
--- This script creates:
 --   1. OLTP tables with full referential integrity
 --   2. Star-schema (OLAP) tables for data warehousing
 --   3. Three database views (advanced SQL, window functions)
 --   4. One stored procedure for ETL (sp_run_etl)
---   5. Seed data for testing
-
 DROP DATABASE IF EXISTS payroll_system;
 CREATE DATABASE payroll_system CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE payroll_system;
@@ -17,19 +12,16 @@ USE payroll_system;
 -- All foreign keys use ON DELETE RESTRICT to enforce referential integrity:
 --   you cannot delete a parent row while child rows reference it.
 
--- ------------------------------------------------------------
 -- 1a. departments
--- ------------------------------------------------------------
+
 CREATE TABLE departments (
     dept_id     INT AUTO_INCREMENT PRIMARY KEY,
     dept_name   VARCHAR(100) NOT NULL UNIQUE,
     created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- ------------------------------------------------------------
 -- 1b. positions
--- Each position belongs to exactly one department.
--- ------------------------------------------------------------
+
 CREATE TABLE positions (
     pos_id      INT AUTO_INCREMENT PRIMARY KEY,
     dept_id     INT          NOT NULL,

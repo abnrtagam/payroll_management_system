@@ -11,7 +11,6 @@ $current_page = 'process';
 $errors = [];
 $success = '';
 
-// ── Handle Form Submission ──────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $month = (int)($_POST['month'] ?? 0);
     $year  = (int)($_POST['year'] ?? 0);
@@ -33,12 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($employees)) {
                 $errors[] = 'No active employees found to process.';
             } else {
-                /*
-                   Concurrency Control and Transaction Logic:
-                   We use a transaction to ensure that either all payroll records are created
-                   or none are. We also check the version of each employee to ensure
-                   no one modified the employee record while we are processing.
-                */
+              
                 $pdo->beginTransaction();
                 $processed_count = 0;
 
@@ -47,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $current_version = $emp['version'];
                     $basic_pay = $emp['base_salary'];
                     
-                    // Simple calculation for demo: 15% deductions
+                  
                     $deductions = $basic_pay * 0.15;
                     $net_pay = $basic_pay - $deductions;
 

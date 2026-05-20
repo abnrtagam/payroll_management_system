@@ -24,28 +24,6 @@ if (isset($_POST['run_etl'])) {
 
 // Fetch fact table data with joins to dimensions
 try {
-    $stmt = $pdo->query("
-        SELECT 
-            f.fact_id,
-            e.full_name,
-            d.dept_name,
-            p.pos_title,
-            t.period_label,
-            f.net_pay
-        FROM fact_payroll f
-        INNER JOIN dim_employee de   ON f.dim_emp_id = de.dim_emp_id
-        INNER JOIN dim_department dd ON f.dim_dept_id = dd.dim_dept_id
-        INNER JOIN dim_position dp   ON f.dim_pos_id = dp.dim_pos_id
-        INNER JOIN dim_time dt       ON f.dim_time_id = dt.dim_time_id
-        
-        -- Join back to source names for display if needed, or use dim names
-        -- We'll use the dimension names as they are already populated by ETL
-        -- Wait, the dimensions HAVE the names! Let's use them.
-        -- dim_employee has full_name
-        -- dim_department has dept_name
-        -- dim_position has pos_title
-        -- dim_time has period_label
-    ");
     
     // Let's rewrite the query to use dimension names directly
     $stmt = $pdo->query("
@@ -65,9 +43,8 @@ try {
     ");
     $fact_data = $stmt->fetchAll();
 } catch (PDOException $e) {
-    // If ETL hasn't run yet, table might be empty or query might fail if tables don't exist
-    // But they were created in Step 1.
     $fact_data = [];
+    $error = 'Database Query Error: ' . $e->getMessage();
 }
 
 require_once __DIR__ . '/../../includes/header.php';
